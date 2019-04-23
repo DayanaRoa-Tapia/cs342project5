@@ -1,0 +1,22 @@
+{
+  "name": "342proj5server",
+  "version": "1.0.0",
+  "description": "3s dice game application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DayanaRoa-Tapia/cs342project5.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DayanaRoa-Tapia/cs342project5/issues"
+  },
+  "homepage": "https://github.com/DayanaRoa-Tapia/cs342project5#readme",
+  "dependencies": {
+    "electron": "^4.1.4"
+  }
+}
