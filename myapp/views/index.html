@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <style>
+
+    	#username {
+    		margin: 100px auto;
+    	}
+    	ul {
+    		padding: 0;
+    	}
+
+    	#dice-container {
+		  display: flex;
+		  justify-content: center;
+		}
+		.dice {
+		  font-size: 120px;
+		}
+		.dice:hover {
+		  cursor: pointer;
+		}
+    </style>
+  </head>
+  <body>
+    
+
+    <div class="container">
+ 
+ 		<div class="col-lg-4" id="username" style="display: ">
+ 			<div class="alert alert-danger" style="display: none" id="usernameAlert"></div>
+ 			<form id='usernameForm' class="form-signin">
+		     
+		      <h1 class="h3 mb-3 font-weight-normal">Enter Your Name</h1>
+		      <label for="inputEmail" class="sr-only">Username</label>
+		      <input type="text" id="inputUsername" class="form-control" placeholder="Username" required autofocus>
+		      <button class="btn btn-lg btn-primary btn-block mt-3" type="submit">Enter</button>
+		    
+		    </form>
+
+ 		</div>
+
+
+ 		<div id="gameArea" class="col-lg-12" style="border: 1px solid #000; height: 500px; display: none">
+ 			<div class="row">
+ 				<div class="col-lg-9 text-center">
+
+
+ 					<div class="col-lg-12" id="dice-container"></div>
+
+
+ 					<button style="margin: 0 auto;" id="throw-btn" class="btn btn-success">ROLL</button>
+ 				</div>
+
+ 				<div class="col-lg-3">
+ 					<h4>Player List</h4>
+ 					<hr />
+ 					<div class="col-lg-12" style="border: 1px solid #000; height: 400px">
+ 						<ul id="logs" style="list-style: none">
+ 							
+ 						</ul>
+ 					</div>
+ 				</div>
+ 			</div>
+ 			
+ 		</div>
+    	
+    </div>
+
+
+
+    <script src="./javascripts/socket.io.js"></script>
+	<script src="./javascripts/jquery-3.2.1.slim.min.js"></script>
+    <script src="./javascripts/popper.min.js"></script>
+    <script src="./bootstrap/js/bootstrap.min.js"></script>
+
+
+    <script>
+
+	  $(function () {
+
+	    var socket = io();
+
+	    function showUsername() {
+	    	$("#username").hide();
+	    	$("#gameArea").show();
+	    }
+
+	    function showGame() {
+	    	$("#username").hide();
+	    	$("#gameArea").show();
+	    }
+
+	    $('#usernameForm').submit(function(e){
+	      e.preventDefault(); // prevents page reloading
+
+	      $("#usernameAlert").html(" ").hide();
+
+	      var username = $("#inputUsername").val();
+	      socket.emit('set_username', username);
+
+	      return false;
+	    });
+
+	    socket.on('username_set', function(msg) {
+	    	if (msg == "success") {
+	    		//alert("success");
+	    		showGame();
+
+	    	}
+	    	if (msg == "usernameTaken") {
+	    		$("#usernameAlert").html("This username is already taken.").show();
+	    	}
+	    
+
+	    });
+
+	    socket.on('log', function(msg){
+	     $('#logs').append($('<li>').text(msg));
+	    //   //document.getElementById('#logs').innerHTML += '<li>' + msg + '</li>';
+	     });
+
+
+	    // socket.on('update_list', function (list) {
+
+	    // 		//list
+
+	    // });
+
+		socket.on("disconnect", function(){
+			showUsername();
+		});
+
+
+
+
+
+		let container = document.getElementById("dice-container");
+ 		let throwBtn = document.getElementById("throw-btn");
+
+
+		class dice {
+		    constructor(diceID) {
+		    	//console.log(diceID);
+		      this.el = this.createDice(diceID);
+		      this.timer = 0;
+		      this.timeDeceleration = 1;
+		      this.diceValue = 6;
+		      this.diceFaces = ['&#9856;', '&#9857;', '&#9858;', '&#9859;', '&#9860;', '&#9861;'];
+		      this.diceID = diceID;
+		      //this.el.addEventListener("click", this.throw.bind(this), false);
+
+		      this.el.addEventListener("click", this.delete.bind(this), false);
+
+		      this.init();
+		    }
+		    
+		    init() {
+		      this.print(this.random());
+		    }
+		    
+		    createDice(diceID) {
+		      let div = document.createElement('div');
+		      console.log(diceID);
+		      div.setAttribute("id", "dice" + diceID);
+		      div.setAttribute('class', 'dice');
+		      return div;
+		    }
+		    
+		    console(res) {
+		      return console.log(`Il risultato è ${res} 🎲`);
+		    }
+		    
+		    stop() {
+		      clearTimeout(this.timer);
+		      this.timeDeceleration = 1;
+		      this.console(this.result);
+		    }
+
+		    random() {
+		      return Math.floor(Math.random() * this.diceValue);
+		    }
+
+		    print(res) {
+		      this.el.innerHTML = this.diceFaces[res];
+		    }
+
+		    processing() {
+		      let rand = this.random();
+		      this.print(rand);
+		      return rand + 1;
+		    }
+
+		    cycle() {
+		      this.timeDeceleration += 20;
+		      this.result = this.processing();
+		      this.timer = setTimeout(this.cycle.bind(this), this.timeDeceleration);
+		    }
+
+		    throw () {
+		      setTimeout(this.stop.bind(this), 1000 * this.random() * 0.3);
+		      this.cycle();
+		    }
+
+		    delete() {
+		    	//console.log("abc");
+		    	window.diceRemover(this);
+		    }
+
+		 }
+		 let dices = [];
+		 let diceCreator = (nDice) => {
+		    for (let i = 0; i < nDice; i++) {
+		      let newDice = new dice(i);
+		      //newDice.diceID = i;
+		      container.appendChild(newDice.el);
+		      dices.push(newDice);
+		    }
+		  };
+
+		  window.diceRemover = function (deleteDice) {
+		  	console.log("clicked");
+		  	dices.forEach(function (aDice, index){
+		  		if (deleteDice == aDice) {
+
+		  			var element = document. getElementById("dice"+ aDice.diceID);
+					element. parentNode. removeChild(element);
+
+		  			delete dices[index];
+		  		}
+		  	});
+		  }
+
+		  diceCreator(5);
+		  
+		  let diceCycleFor = () => dices.forEach(dice => dice.throw());
+		  throwBtn.addEventListener("click", () => diceCycleFor());
+
+
+	  });
+	</script>
+  </body>
+</html>
