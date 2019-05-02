@@ -139,6 +139,8 @@
 
 		let container = document.getElementById("dice-container");
  		let throwBtn = document.getElementById("throw-btn");
+		let playerPoints =0;
+ 		let scoreToBeat = 0;
 
 
 		class dice {
@@ -219,6 +221,9 @@
 		      dices.push(newDice);
 		    }
 		  };
+		  
+		  
+		  
 
 		  window.diceRemover = function (deleteDice) {
 		  	console.log("clicked");
@@ -227,16 +232,64 @@
 
 		  			var element = document. getElementById("dice"+ aDice.diceID);
 					element. parentNode. removeChild(element);
+					
+// 	updating value of die faces
+					if(dices[index].diceValue + 1 == 3){
+						dices[index].diceValue = -1;
+					}
+
+// calculate the points of current player points
+					playerPoints += (dices[index].diceValue +1);
+					console.log("current Player Points: "+playerPoints);
 
 		  			delete dices[index];
+// disable roll button until at least one dice is picked
+		  			document.getElementById("throw-btn").disabled = false;
+		  		}
+				// sending the player points to server
+		  		socket.emit('player_Points',playerPoints);
+
+
+
+ // calculating score to beat and sending it to server after player is done 
+		  		if(dices[0] == null && dices[1] == null && dices[2] == null && dices[3] == null && dices[4] == null){
+					
+					document.getElementById("throw-btn").disabled = true;
+
+			  		if(scoreToBeat == 0){
+			  			scoreToBeat = playerPoints;
+			  			socket.emit('disp_scoreToBeat', scoreToBeat);
+			  		}
+			  		else if(scoreToBeat > playerPoints){
+			  			scoreToBeat = playerPoints;
+			  			socket.emit('disp_scoreToBeat', scoreToBeat);
+			  		}
+			  		socket.emit('check_Winner');
 		  		}
 		  	});
 		  }
+// checking for the winner and printing it to online console
+		  socket.on('winner', function(playerWinning){
+		  	document.getElementById("throw-btn").disabled = true;
+		  	console.log(playerWinning + " wins!!!");
+		  });
 
+// checking to see that their is 4 players connected
+		  socket.on('waiting_for_players', function(numPlayers){
+		  	document.getElementById("throw-btn").disabled = true;
+		  	console.log("waiting for " + (4-numPlayers) + " players");
+		  });
+
+// begin game if 4 players are connected
+		  socket.on('begin_Game',function(){
+		  	document.getElementById("throw-btn").disabled = false;
+		  });
+		  
 		  diceCreator(5);
 		  
 		  let diceCycleFor = () => dices.forEach(dice => dice.throw());
-		  throwBtn.addEventListener("click", () => diceCycleFor());
+		  throwBtn.addEventListener("click", function () { diceCycleFor();
+		  	document.getElementById("throw-btn").disabled = true;});
 
 
 	  });
