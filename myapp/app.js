@@ -65,7 +65,13 @@ app.get('/', function(req, res){
 });
 
 
-var players = {};
+var players = {playerPoints:0};
+var numPlayers = 0;
+var lowest_score = 35;
+
+let playerWinning;
+let playersPlayed = 0;
+let prevLowScore;
 
 
 //socket.io
@@ -86,6 +92,8 @@ io.on('connection', function(socket){
     }
     else {
 
+	numPlayers++;
+	    
     	players[socket.id] = username;
 	    socket.emit("username_set", "success"); //username success
 	    io.emit("log", username + " connected");
@@ -94,14 +102,62 @@ io.on('connection', function(socket){
 	    //
 	   // io.emit("update_list", );
 		
+// checking for 4 players	    
+	if (numPlayers == 4) {
+   	  io.emit('begin_Game');
+   	 }
+   	 else{
+  	    io.emit('waiting_for_players', numPlayers);
+  	  }
 
+	    
+	    
     }
   });
+	
+// setting each individual score to corresponding player
+    socket.on('player_Points',function(playerPoints){
+        players["playerPoints"] = playerPoints;
+    });
+	
+	
+// setting the score to beat 
+   socket.on('disp_scoreToBeat',function(scoreToBeat){
+      playersPlayed++;
+      console.log("players played: "+ playersPlayed);
+
+      if(lowest_score >= scoreToBeat){
+        prevLowScore = lowest_score;
+        lowest_score = scoreToBeat;
+      }
+      
+      // console.log("prev: "+ prevLowScore);
+      console.log("beat: "+ lowest_score);
+  });
+	
+	
+// checking for winner and sending it over server
+   socket.on('check_Winner',function(){
+     if(players["playerPoints"] == lowest_score && players["playerPoints"] != prevLowScore){
+
+        playerWinning = players[socket.id];
+        
+     }
+     console.log(playerWinning + " wins");
+
+     if(playersPlayed == 4){
+        io.emit('winner', playerWinning);
+     }
+   });
+	
+	
+	
 
   //disconnect
   socket.on("disconnect", function(){
 	io.emit("log", players[socket.id] + " has quit.");
 	delete players[socket.id];
+	  numPlayers--;
   });	
 
 });
