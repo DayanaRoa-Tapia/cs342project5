@@ -182,7 +182,8 @@
 		    }
 
 		    random() {
-		      return Math.floor(Math.random() * this.diceValue);
+		      this.diceValue = Math.floor(Math.random() * 6);
+			    return this.diceValue;
 		    }
 
 		    print(res) {
