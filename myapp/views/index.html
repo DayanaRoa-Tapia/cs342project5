@@ -4,14 +4,12 @@
     <title>Socket.IO chat</title>
     <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <style>
-
     	#username {
     		margin: 100px auto;
     	}
     	ul {
     		padding: 0;
     	}
-
     	#dice-container {
 		  display: flex;
 		  justify-content: center;
@@ -43,7 +41,7 @@
  		</div>
 
 
- 		<div id="gameArea" class="col-lg-12" style="border: 1px solid #000; height: 500px; display: none">
+ 		<div id="gameArea" class="col-lg-12" style="border: 1px solid #000; height: 800px; display: none">
  			<div class="row">
  				<div class="col-lg-9 text-center">
 
@@ -63,6 +61,31 @@
  						</ul>
  					</div>
  				</div>
+				
+				<div class="col-lg-4">
+					<h2>Scoreboard</h2>
+					<hr />
+					<div class="col-lg-12" style="border: 1px solid #000; height: 250px; width: 250px">
+ 						<ul id="points" style="list-style: none">
+ 							
+ 						</ul>
+						
+						<textarea readonly id="myscore" rows="2" cols="20">
+							Your score: 0</textarea>
+						<textarea readonly id="p2score" rows="2" cols="20"></textarea>
+						<textarea readonly id="p3score" rows="2" cols="20"></textarea>
+						<textarea readonly id="p4score" rows="2" cols="20"></textarea>
+ 					</div>
+				
+				</div>
+					<div class="col-lg-6">
+						<h2>Game Messages</h2>
+						<div class="col-lg-6" style="border: 1px solid #000; height: 250px">
+							<ul id="gameMsg" style="list-style: none">
+ 							
+							</ul>
+						</div>
+					</div>
  			</div>
  			
  		</div>
@@ -78,71 +101,61 @@
 
 
     <script>
-
 	  $(function () {
-
 	    var socket = io();
-
 	    function showUsername() {
 	    	$("#username").show();
 	    	$("#gameArea").hide();
 	    }
-
 	    function showGame() {
 	    	$("#username").hide();
 	    	$("#gameArea").show();
 	    }
-
 	    $('#usernameForm').submit(function(e){
 	      e.preventDefault(); // prevents page reloading
-
 	      $("#usernameAlert").html(" ").hide();
-
 	      var username = $("#inputUsername").val();
 	      socket.emit('set_username', username);
-
 	      return false;
 	    });
-
 	    socket.on('username_set', function(msg) {
 	    	if (msg == "success") {
 	    		//alert("success");
 	    		showGame();
-
 	    	}
 	    	if (msg == "usernameTaken") {
 	    		$("#usernameAlert").html("This username is already taken.").show();
 	    	}
 	    
-
 	    });
-
 	    socket.on('log', function(msg){
 	     $('#logs').append($('<li>').text(msg));
 	    //   //document.getElementById('#logs').innerHTML += '<li>' + msg + '</li>';
 	     });
-
-
 	    // socket.on('update_list', function (list) {
-
 	    // 		//list
-
 	    // });
+		
+		socket.on('game', function(msg){
+		$('#gameMsg').append($('<li>').text(msg));
+		});
 
+		socket.on('point', function(names, pts) {
+			//console.log("arrived in point");
+			document.getElementById("myscore").value = names[0] + "'s score: " + pts[0];
+			document.getElementById("p2score").value = names[1] + "'s score: " + pts[1];
+			document.getElementById("p3score").value = names[2] + "'s score: " + pts[2];
+			document.getElementById("p4score").value = names[3] + "'s score: " + pts[3];
+		});
+		
 		socket.on("disconnect", function(){
 			showUsername();
 		});
-
-
-
-
-
+		
 		let container = document.getElementById("dice-container");
  		let throwBtn = document.getElementById("throw-btn");
 		let playerPoints = 0;
  		let scoreToBeat = 0;
-
-
 		class dice {
 		    constructor(diceID) {
 		    	//console.log(diceID);
@@ -153,9 +166,7 @@
 		      this.diceFaces = ['&#9856;', '&#9857;', '&#9858;', '&#9859;', '&#9860;', '&#9861;'];
 		      this.diceID = diceID;
 		      //this.el.addEventListener("click", this.throw.bind(this), false);
-
 		      this.el.addEventListener("click", this.delete.bind(this), false);
-
 		      this.init();
 		    }
 		    
@@ -172,7 +183,7 @@
 		    }
 		    
 		    console(res) {
-		      return console.log(`Il risultato è ${res} 🎲`);
+		      return console.log(`Il risultato e ${res} ??`);
 		    }
 		    
 		    stop() {
@@ -180,38 +191,31 @@
 		      this.timeDeceleration = 1;
 		      this.console(this.result);
 		    }
-
 		    random() {
-		      this.diceValue = Math.floor(Math.random() * 6);
-			    return this.diceValue;
+			  this.diceValue = Math.floor(Math.random() * 6);
+		      return this.diceValue;
 		    }
-
 		    print(res) {
 		      this.el.innerHTML = this.diceFaces[res];
 		    }
-
 		    processing() {
 		      let rand = this.random();
 		      this.print(rand);
 		      return rand + 1;
 		    }
-
 		    cycle() {
 		      this.timeDeceleration += 20;
 		      this.result = this.processing();
 		      this.timer = setTimeout(this.cycle.bind(this), this.timeDeceleration);
 		    }
-
 		    throw () {
 		      setTimeout(this.stop.bind(this), 1000 * this.random() * 0.3);
 		      this.cycle();
 		    }
-
 		    delete() {
 		    	//console.log("abc");
 		    	window.diceRemover(this);
 		    }
-
 		 }
 		 let dices = [];
 		 let diceCreator = (nDice) => {
@@ -225,12 +229,10 @@
 		  
 		  
 		  
-
 		  window.diceRemover = function (deleteDice) {
 		  	console.log("clicked");
 		  	dices.forEach(function (aDice, index){
 		  		if (deleteDice == aDice) {
-
 		  			var element = document. getElementById("dice"+ aDice.diceID);
 					element. parentNode. removeChild(element);
 					
@@ -238,25 +240,20 @@
 					if(dices[index].diceValue + 1 == 3){
 						dices[index].diceValue = -1;
 					}
-
 // calculate the points of current player points
 					playerPoints += (dices[index].diceValue +1);
-					console.log("current Player Points: "+playerPoints);
-
+					//console.log("current Player Points: "+ playerPoints);
+					//document.getElementById("myscore").value = "Your score: " + playerPoints;
 		  			delete dices[index];
 // disable roll button until at least one dice is picked
 		  			document.getElementById("throw-btn").disabled = false;
 		  		}
-				// sending the player points to server
-		  		socket.emit('player_Points',playerPoints);
-
-
-
  // calculating score to beat and sending it to server after player is done 
+				socket.emit('player_Points', playerPoints);
+				
 		  		if(dices[0] == null && dices[1] == null && dices[2] == null && dices[3] == null && dices[4] == null){
 					
 					document.getElementById("throw-btn").disabled = true;
-
 			  		if(scoreToBeat == 0){
 			  			scoreToBeat = playerPoints;
 			  			socket.emit('disp_scoreToBeat', scoreToBeat);
@@ -274,13 +271,11 @@
 		  	document.getElementById("throw-btn").disabled = true;
 		  	console.log(playerWinning + " wins!!!");
 		  });
-
 // checking to see that their is 4 players connected
 		  socket.on('waiting_for_players', function(numPlayers){
 		  	document.getElementById("throw-btn").disabled = true;
 		  	console.log("waiting for " + (4-numPlayers) + " players");
 		  });
-
 // begin game if 4 players are connected
 		  socket.on('begin_Game',function(){
 		  	document.getElementById("throw-btn").disabled = false;
@@ -291,8 +286,6 @@
 		  let diceCycleFor = () => dices.forEach(dice => dice.throw());
 		  throwBtn.addEventListener("click", function () { diceCycleFor();
 		  	document.getElementById("throw-btn").disabled = true;});
-
-
 	  });
 	</script>
   </body>

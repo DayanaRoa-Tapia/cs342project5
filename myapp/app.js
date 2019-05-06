@@ -66,12 +66,15 @@ app.get('/', function(req, res){
 
 
 var players = {playerPoints:0};
+var names = [];
+var pts = [];
 var numPlayers = 0;
 var lowest_score = 35;
 
 let playerWinning;
 let playersPlayed = 0;
 let prevLowScore;
+
 
 
 //socket.io
@@ -87,7 +90,7 @@ io.on('connection', function(socket){
   //set username
   socket.on('set_username', function(username) {
     if (Object.values(players).includes(username)) {
-		socket.emit("username_set", "usernameTaken"); //username success
+		socket.emit("username_set", "usernameTaken"); //username fail
 		console.log("Username taken " + username);
     }
     else {
@@ -95,6 +98,11 @@ io.on('connection', function(socket){
 	numPlayers++;
 	    
     	players[socket.id] = username;
+		names.push(players[socket.id]);
+		pts.push(players["playerPoints"]);
+		//allPlayers[numPlayers - 1][socket.id] = username;
+		//allPlayers[numPlayers - 1]["playerPoints"] = players["playerPoints"];
+		//console.log("player " + allPlayers[0][socket.id] + " has " + allPlayers[0]["playerPoints"] + " points");
 	    socket.emit("username_set", "success"); //username success
 	    io.emit("log", username + " connected");
 	    console.log("Username has set name = " + username);
@@ -106,30 +114,40 @@ io.on('connection', function(socket){
 	if (numPlayers == 4) {
    	  io.emit('begin_Game');
    	 }
-   	 else{
+   	 else {
   	    io.emit('waiting_for_players', numPlayers);
   	  }
-
-	    
-	    
     }
   });
 	
 // setting each individual score to corresponding player
-    socket.on('player_Points',function(playerPoints){
+    socket.on('player_Points', function(playerPoints){
         players["playerPoints"] = playerPoints;
+		for(var i = 0; i < 4; i++) {
+			if(names[i] == players[socket.id])
+				pts[i] = playerPoints;
+		}
+		//console.log(JSON.stringify(names));
+		//console.log(JSON.stringify(pts));
+		//allPlayers[0]["playerPoints"] = playerPoints;
+		io.emit("point", names, pts);
+		//socket.emit('point', allPlayers);
+		//console.log("player points: " + players["playerPoints"]);
     });
 	
 	
 // setting the score to beat 
    socket.on('disp_scoreToBeat',function(scoreToBeat){
-      playersPlayed++;
+	  if(playersPlayed <= 3)
+		playersPlayed++;
       console.log("players played: "+ playersPlayed);
 
       if(lowest_score >= scoreToBeat){
         prevLowScore = lowest_score;
         lowest_score = scoreToBeat;
       }
+	  
+	  io.emit("game", "Score to beat: " + lowest_score);
       
       // console.log("prev: "+ prevLowScore);
       console.log("beat: "+ lowest_score);
@@ -146,7 +164,8 @@ io.on('connection', function(socket){
      console.log(playerWinning + " wins");
 
      if(playersPlayed == 4){
-        io.emit('winner', playerWinning);
+        //io.emit('winner', playerWinning);
+		io.emit("game", playerWinning + " has won!");
      }
    });
 	
