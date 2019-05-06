@@ -280,6 +280,19 @@
 		  socket.on('begin_Game',function(){
 		  	document.getElementById("throw-btn").disabled = false;
 		  });
+
+		  socket.on('upd_users',function(msg){
+		  	console.log(msg);
+		  	var usrList = JSON.parse(msg);
+
+		  	//var aname in usrList {}
+			$('#logs').html('');
+		  	for (var i=0; i<usrList.length; i++) {
+
+    				$('#logs').append($('<li>').text(usrList[i]));
+				}
+
+		  });
 		  
 		  diceCreator(5);
 		  
