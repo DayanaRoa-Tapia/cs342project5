@@ -107,6 +107,7 @@ io.on('connection', function(socket){
     	players[socket.id] = username;
 		  names.push(players[socket.id]);
 		  pts.push(players["playerPoints"]);
+		  socket.emit("game", "You are: " + username);
 		//allPlayers[numPlayers - 1][socket.id] = username;
 		//allPlayers[numPlayers - 1]["playerPoints"] = players["playerPoints"];
 		//console.log("player " + allPlayers[0][socket.id] + " has " + allPlayers[0]["playerPoints"] + " points");
@@ -153,9 +154,8 @@ io.on('connection', function(socket){
       if(lowest_score >= scoreToBeat){
         prevLowScore = lowest_score;
         lowest_score = scoreToBeat;
+		io.emit("game", "Score to beat: " + lowest_score);
       }
-	  
-	  io.emit("game", "Score to beat: " + lowest_score);
       
       // console.log("prev: "+ prevLowScore);
       console.log("beat: "+ lowest_score);
