@@ -149,7 +149,7 @@
 		      this.el = this.createDice(diceID);
 		      this.timer = 0;
 		      this.timeDeceleration = 1;
-		      this.diceValue = 6;
+		      this.diceValue = 1;
 		      this.diceFaces = ['&#9856;', '&#9857;', '&#9858;', '&#9859;', '&#9860;', '&#9861;'];
 		      this.diceID = diceID;
 		      //this.el.addEventListener("click", this.throw.bind(this), false);
@@ -182,7 +182,8 @@
 		    }
 
 		    random() {
-		      return Math.floor(Math.random() * this.diceValue);
+		      this.diceValue = Math.floor(Math.random() * 6);
+			    return this.diceValue;
 		    }
 
 		    print(res) {
