@@ -76,6 +76,13 @@ let playersPlayed = 0;
 let prevLowScore;
 
 
+//UPDATE PLAYER LIST
+function updateUsers (names) {
+
+  io.emit('upd_users', JSON.stringify(names));
+
+
+}
 
 //socket.io
 
@@ -95,17 +102,18 @@ io.on('connection', function(socket){
     }
     else {
 
-	numPlayers++;
+	    numPlayers++;
 	    
     	players[socket.id] = username;
-		names.push(players[socket.id]);
-		pts.push(players["playerPoints"]);
+		  names.push(players[socket.id]);
+		  pts.push(players["playerPoints"]);
 		//allPlayers[numPlayers - 1][socket.id] = username;
 		//allPlayers[numPlayers - 1]["playerPoints"] = players["playerPoints"];
 		//console.log("player " + allPlayers[0][socket.id] + " has " + allPlayers[0]["playerPoints"] + " points");
 	    socket.emit("username_set", "success"); //username success
-	    io.emit("log", username + " connected");
+	    //io.emit("log", username + " connected");
 	    console.log("Username has set name = " + username);
+      updateUsers(names);
 
 	    //
 	   // io.emit("update_list", );
@@ -170,16 +178,36 @@ io.on('connection', function(socket){
    });
 	
 	
+
+
+
+
+
 	
 
   //disconnect
   socket.on("disconnect", function(){
-	io.emit("log", players[socket.id] + " has quit.");
-	delete players[socket.id];
-	  numPlayers--;
-  });	
 
-});
+    //Iterate the list and delete the disconnected user
+    for(var i in names){
+      if(names[i]==players[socket.id]){
+          names.splice(i,1);
+          break;
+      }
+    }
+
+    delete players[socket.id];
+      numPlayers--;
+
+
+      //call the function that updates the user list.
+    updateUsers(names);
+   
+    });
+
+
+
+  });
 
 //end of socket.io
 
